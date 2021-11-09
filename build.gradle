@@ -1,104 +1,125 @@
 plugins {
     id 'java'
-    id 'maven-publish'
-    id 'signing'
+    id 'maven-publish'  // maven 发布插件
+    id 'signing'  // 签名插件
 }
 
-group 'io.github.ylcto'
-version '1.0-SNAPSHOT'
+//  组 和 版本配置
+group 'cn.mrcode.mycat'
+version '0.1.0'
 
+// 编译版本和编码配置
+sourceCompatibility = 11
 
-jar {
-    enabled = true
+compileJava {
+    sourceCompatibility = 11
+    targetCompatibility = 11
+    [compileJava]*.options*.encoding = 'UTF-8'
 }
+compileTestJava {
+    sourceCompatibility = 11
+    targetCompatibility = 11
+    [compileTestJava]*.options*.encoding = 'UTF-8'
+}
+// 测试用例没有写好，还不能自动测试
+// 跳过所有文件的编译测试；不是跳过compileTestJava task 而是在执行该task的时候，跳过所有的测试文件
+test {
+    exclude '**/*.class'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'mysql:mysql-connector-java:8.0.27'
+}
+
+// 后面的都是打包的配置
 task sourcesJar(type: Jar) {
+    classifier = 'sources'
     from sourceSets.main.allJava
-    archiveClassifier = 'sources'
 }
+// 生成 javadoc jar
 task javadocJar(type: Jar) {
-    from javadoc
     classifier = 'javadoc'
+    from javadoc.destinationDir
 }
+// javadoc 配置，这里是自定义了 java doc 的一些配置
+javadoc {
+    description = "Generates project-level javadoc for use in -javadoc jar"
 
-sourceSets.main.resources.srcDirs = ["src/main/java","src/main/resources"]
+    options.memberLevel = org.gradle.external.javadoc.JavadocMemberLevel.PROTECTED
+    options.author = true
+    options.version = true
+    options.header = project.name
+    options.addStringOption('Xdoclint:none', '-quiet')
 
+    // suppress warnings due to cross-module @see and @link references;
+    // note that global 'api' task does display all warnings.
+    logging.captureStandardError LogLevel.INFO
+    logging.captureStandardOutput LogLevel.INFO // suppress "## warnings" message
+    options.encoding = "UTF-8"  //编码一定要配置否则直接出错
+    options.charSet = 'UTF-8'
+}
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId 'io.github.ylcto'
-            artifactId 'jwutils'
-            version '1.0.0'
-            //若是war包，就写components.web,若是jar包，就写components.java
+            groupId group
+            artifactId project.name
+            version "${version}"
             from components.java
-//                artifact shadowJar
             artifact sourcesJar
             artifact javadocJar
+
             pom {
-                // 构件名称
-                // 区别于artifactId，可以理解为artifactName
-                name = 'jwutils'
-                // 构件描述
-                description = 'javaweb开源插件'
-                // 构件主页
-                url = 'https://github.com/ylcto/jwutils'
-                // 许可证名称和地址
+                name = "jwutils"
+                description = "javaweb plugins"
+                url = "https://github.com/ylcto/jwutils"
                 licenses {
                     license {
-                        name = 'The Apache License, Version 2.0'
-                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
                     }
                 }
-                // 开发者信息
                 developers {
                     developer {
-                        name = 'xmjar'
-                        email = 'xm_edu@126.com'
+                        id = "zq99299"
+                        name = "xmjar"
+                        email = "xm_edu@126.com"
                     }
                 }
-                // 版本控制仓库地址
                 scm {
-                    url = 'https://github.com/ylcto/jwutils'
-                    connection = 'scm:git:https://github.com/ylcto/jwutils.git'
-                    developerConnection = 'scm:https://github.com/ylcto/jwutils.git'
+                    connection = "scm:git:https://github.com/ylcto/jwutils.git"
+                    developerConnection = "scm:git:https://github.com/ylcto/jwutils.git"
+                    url = "https://github.com/ylcto/jwutils"
                 }
             }
         }
     }
-    // 定义发布到哪里
     repositories {
         maven {
-            name 'newframeRepository'
-            url "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            name 'sonatypeRepository'
+            url 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
             credentials {
-                // 这里就是之前在issues.sonatype.org注册的账号
-                username = "xmjar"
-                password = "9ZzP5n4yvP^Afdq%"
+                username = "${NEXUS_USERNAME}"
+                password = "${NEXUS_PASSWORD}"
+            }
+        }
+        maven {
+            name = 'sonatypeSnapshotRepository'
+            url = 'https://oss.sonatype.org/content/repositories/snapshots/'
+            credentials {
+                username = "${NEXUS_USERNAME}"
+                password = "${NEXUS_PASSWORD}"
             }
         }
     }
 }
-repositories{
-    mavenCentral()
-}
 
+// 签名配置，注意这里的顺序，今天第一次知道 gradle 中的 task 等配置也是有顺序的
+// 必须在 publishing 配置之后
 signing {
     sign publishing.publications.mavenJava
-}
-
-javadoc {
-    // <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    // 防止本地打开中文乱码
-//        options.addStringOption("charset", "UTF-8")
-    options.encoding = "UTF-8"
-    failOnError = false
-}
-
-dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
-}
-
-test {
-    useJUnitPlatform()
 }
