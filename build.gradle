@@ -5,8 +5,8 @@ plugins {
 }
 
 //  组 和 版本配置
-group 'cn.mrcode.mycat'
-version '0.1.0'
+group 'io.github.ylcto'
+version '1.0.0'
 
 // 编译版本和编码配置
 sourceCompatibility = 11
@@ -66,9 +66,12 @@ javadoc {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId "io.github.ylcto"
-            artifactId "jwutils"
-            version "${version}"
+//            groupId "io.github.ylcto"
+//            artifactId "jwutils"
+//            version "${version}"
+             groupId = project.group
+             artifactId = project.name
+             version = project.version
             from components.java
             artifact sourcesJar
             artifact javadocJar
