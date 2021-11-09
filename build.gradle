@@ -1,0 +1,103 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group 'io.github.ylcto'
+version '1.0-SNAPSHOT'
+
+
+jar {
+    enabled = true
+}
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = 'sources'
+}
+task javadocJar(type: Jar) {
+    from javadoc
+    classifier = 'javadoc'
+}
+sourceSets.main.resources.srcDirs = ["src/main/java","src/main/resources"]
+
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId project.group
+            artifactId project.name
+            version project.version
+            //若是war包，就写components.web,若是jar包，就写components.java
+            from components.java
+//                artifact shadowJar
+            artifact sourcesJar
+            artifact javadocJar
+            pom {
+                // 构件名称
+                // 区别于artifactId，可以理解为artifactName
+                name = 'newframe'
+                // 构件描述
+                description = 'newframe快速开发框架'
+                // 构件主页
+                url = 'https://gitee.com/quanwenz/newframe'
+                // 许可证名称和地址
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                // 开发者信息
+                developers {
+                    developer {
+                        name = 'iscas'
+                        email = 'quanwen@iscas.ac.cn'
+                    }
+                }
+                // 版本控制仓库地址
+                scm {
+                    url = 'https://gitee.com/quanwenz/newframe'
+                    connection = 'scm:git:https://gitee.com/quanwenz/newframe.git'
+                    developerConnection = 'scm:git:https://gitee.com/quanwenz/newframe.git'
+                }
+            }
+        }
+    }
+    // 定义发布到哪里
+    repositories {
+        maven {
+            name 'newframeRepository'
+            url "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                // 这里就是之前在issues.sonatype.org注册的账号
+                username = "xmjar"
+                password = "9ZzP5n4yvP^Afdq%"
+            }
+        }
+    }
+}
+repositories{
+    mavenCentral()
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+javadoc {
+    // <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    // 防止本地打开中文乱码
+//        options.addStringOption("charset", "UTF-8")
+    options.encoding = "UTF-8"
+    failOnError = false
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+    useJUnitPlatform()
+}
