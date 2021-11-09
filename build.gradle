@@ -66,8 +66,8 @@ javadoc {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId group
-            artifactId project.name
+            groupId "io.github.ylcto"
+            artifactId "jwutils"
             version "${version}"
             from components.java
             artifact sourcesJar
